@@ -1,5 +1,7 @@
 const { Transaction } = require("../config/db");
-const { generateShares, reconstructSecret } = require("../utils/visualCrypto");
+const visualCrypto = require("../utils/visualCrypto");
+const VC = new visualCrypto();
+// const { generateShares, reconstructSecret } = require("../utils/visualCrypto");
 const { checkUrlSafety, verifyHMAC } = require("../utils/secutiryCheck");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
@@ -18,29 +20,29 @@ module.exports = {
       }
 
       // VC Share generation
-      const shares = generateShares(paymentUrl);
-      const qrCode = await QRCode.toDataURL(shares.client, {
-        errorCorrectionLevel: "H",
-        margin: 2,
-      });
+      const { qrCode, serverShare, hmac } = await VC.generateShares(paymentUrl);
+      // const qrCode = await QRCode.toDataURL(shares.client, {
+      //   errorCorrectionLevel: "H",
+      //   margin: 2,
+      // });
 
       // Generate HMAC
-      const hmacPayload = JSON.stringify({
-        transactionId: String(transactionId),
-        amount: String(amount),
-      });
+      // const hmacPayload = JSON.stringify({
+      //   transactionId: String(transactionId),
+      //   amount: String(amount),
+      // });
 
-      const hmac = crypto
-        .createHmac("sha256", process.env.VC_SECRET)
-        .update(hmacPayload)
-        .digest("hex");
+      // const hmac = crypto
+      //   .createHmac("sha256", process.env.VC_SECRET)
+      //   .update(hmacPayload)
+      //   .digest("hex");
 
       // Store transaction
       const transaction = await Transaction.create({
         transactionId,
         amount: String(amount),
-        clientShare: shares.client,
-        serverShare: shares.server,
+        clientShare: qrCode,
+        serverShare: serverShare,
         hmac,
         expiresAt: new Date(Date.now() + 18000000), // 3 minutes
       });
@@ -51,7 +53,6 @@ module.exports = {
       res.json({
         qrCode,
         transactionId: transaction.transactionId,
-        expiresIn: 120,
       });
     } catch (error) {
       res.status(402).json({ error: "Payment initiation failed" });
@@ -71,7 +72,7 @@ module.exports = {
     }
 
     // VC Reconstruction
-    const secret = reconstructSecret(
+    const secret = VC.reconstructSecret(
       transaction.clientShare,
       transaction.serverShare
     );
