@@ -37,24 +37,23 @@ function checkContentType(req) {
 }
 
 async function checkUrlSafety(url) {
-  return true;
-  // const parsed = new URL(url);
-  // const blockedExt = ["exe", "bat", "sh", "dmg"];
-  // const ext = parsed.pathname.split(".").pop().toLowerCase();
-  // if (blockedExt.includes(ext)) return false;
+  const parsed = new URL(url);
+  const blockedExt = ["exe", "bat", "sh", "dmg", "apk", "msi", "jar", "cmd"];
+  const ext = parsed.pathname.split(".").pop().toLowerCase();
+  if (blockedExt.includes(ext)) return false;
 
-  // const res = await axios.post(
-  //   `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${process.env.SAFE_BROWSING_KEY}`,
-  //   {
-  //     threatInfo: {
-  //       threatTypes: ["MALWARE", "SOCIAL_ENGINEERING"],
-  //       platformTypes: ["ANY_PLATFORM"],
-  //       threatEntries: [{ url }],
-  //     },
-  //   }
-  // );
+  const res = await axios.post(
+    `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${process.env.GOOGLE_SAFE_BROWSING_KEY}`,
+    {
+      threatInfo: {
+        threatTypes: ["MALWARE", "SOCIAL_ENGINEERING"],
+        platformTypes: ["ANY_PLATFORM"],
+        threatEntries: [{ url }],
+      },
+    }
+  );
 
-  // return !res.data.matches;
+  return !res.data.matches;
 }
 
 module.exports = {
