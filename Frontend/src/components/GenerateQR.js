@@ -40,6 +40,7 @@ const GenerateQR = () => {
       //     const verification = await axios.post(
       //       "http://localhost:3000/api/payments/verify",
       //       {
+      //         clientShare: qrCode,
       //         transactionId: response.data.transactionId,
       //       }
       //     );

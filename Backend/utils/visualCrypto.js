@@ -6,7 +6,7 @@ const { createCanvas } = require("canvas");
 class visualCrypto {
   constructor() {
     this.blockSize = 8;
-    this.hmacSecret = crypto.randomBytes(32);
+    this.hmacSecret = Buffer.from(process.env.VC_SECRET, "hex");
   }
 
   async generateShares(secretData) {
@@ -28,7 +28,8 @@ class visualCrypto {
       .createHmac("sha256", this.hmacSecret)
       .update(data)
       .digest("hex");
-    return { data: `${data}|${Date.now()}`, hmac };
+    // return { data: `${data}|${Date.now()}`, hmac };
+    return { data: `${data}}`, hmac };
   }
 
   splitData(data) {
@@ -67,10 +68,57 @@ class visualCrypto {
     ]).toString("base64");
   }
 
-  static reconstructSecret(clientShare, serverShare) {
-    const client = Buffer.from(clientShare, "base64");
-    const server = Buffer.from(serverShare, "base64");
-    return client.map((b, i) => b ^ server[i]).toString("utf8");
+  async reconstructSecret(clientShare, serverShare) {
+    // Extract client share from data URL
+    const clientBase64 = clientShare.split(",")[1];
+    const clientBuffer = Buffer.from(clientBase64, "base64");
+    console.log("Client Buffer Length:", clientBuffer.length);
+
+    // Parse encrypted server share
+    const encryptedBuffer = Buffer.from(serverShare, "base64");
+    const iv = encryptedBuffer.subarray(0, 16);
+    const authTag = encryptedBuffer.subarray(encryptedBuffer.length - 16);
+    const ciphertext = encryptedBuffer.subarray(
+      16,
+      encryptedBuffer.length - 16
+    );
+
+    console.log("IV:", iv);
+    console.log("Auth Tag:", authTag);
+    console.log("Ciphertext Length:", ciphertext.length);
+
+    // Decrypt server share
+    const decipher = crypto
+      .createDecipheriv("aes-256-gcm", this.hmacSecret, iv)
+      .setAuthTag(authTag);
+
+    const serverBuffer = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]);
+    console.log("Server Buffer Length:", serverBuffer.length);
+
+    // Ensure buffers have the same length
+    // if (clientBuffer.length !== serverBuffer.length) {
+    //   throw new Error(
+    //     `Buffer length mismatch: clientBuffer (${clientBuffer.length}) and serverBuffer (${serverBuffer.length})`
+    //   );
+    // }
+
+    const reconstructed = clientBuffer.map((b, i) => b ^ serverBuffer[i]);
+    return reconstructed.toString("utf8");
+
+    // Reconstruct original secret
+    // const reconstructedSecret = Buffer.from(
+    //   clientBuffer.map((b, i) => b ^ serverBuffer[i])
+    // ).toString("utf8");
+    // console.log("Reconstructed Secret:", reconstructedSecret);
+
+    // return reconstructedSecret;
+
+    // const client = Buffer.from(clientShare, "base64");
+    // const server = Buffer.from(serverShare, "base64");
+    // return client.map((b, i) => b ^ server[i]).toString("utf8");
   }
 }
 
