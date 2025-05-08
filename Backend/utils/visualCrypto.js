@@ -60,10 +60,10 @@ class visualCrypto {
       share2[i] = buffer[i] ^ share1[i];
     }
 
-    return {
-      share1: share1.toString("base64"),
-      share2: share2,
-    };
+    const share1Base64 = share1.toString("base64");
+    const share2Base64 = share2.toString("base64");
+
+    return [share1Base64, share2Base64];
   }
 
   // async encodeQR(data, hmac) {
@@ -132,14 +132,14 @@ class visualCrypto {
     console.log("share1 : " + share1);
     console.log("share2 : " + share2);
 
-    const share1Base64 =
-      "T6DKo7cwpMgItmQ/XRmUL7eN5nNbCboVAmfeo4DyH3V3pV3A6iBl1deghbv2Kwfno/8mZHzww3qjErGj7sJy+eLkt+nTG2x0nepH11fcXI3cNoycuKc1F7QXB6mJXOmYv+M=";
-    const share2Base64 =
-      "J9S+08QKi+d70wdKL3y5X9b0yBYjaNdlbgLx0+GLIBQayiiunh1U5fHE8YbHHDPRlM4SXUXF9EmUNMXb0/REzdfXhNjmNgpDrttq427oaaC9ALr+lZMMJtEhP8ywZdr6i54=";
+    // const share1Base64 =
+    //   "T6DKo7cwpMgItmQ/XRmUL7eN5nNbCboVAmfeo4DyH3V3pV3A6iBl1deghbv2Kwfno/8mZHzww3qjErGj7sJy+eLkt+nTG2x0nepH11fcXI3cNoycuKc1F7QXB6mJXOmYv+M=";
+    // const share2Base64 =
+    //   "J9S+08QKi+d70wdKL3y5X9b0yBYjaNdlbgLx0+GLIBQayiiunh1U5fHE8YbHHDPRlM4SXUXF9EmUNMXb0/REzdfXhNjmNgpDrttq427oaaC9ALr+lZMMJtEhP8ywZdr6i54=";
 
     // Convert share1 to Uint8Array if needed
-    const share1Buffer = Buffer.from(share1Base64, "base64");
-    const share2Buffer = Buffer.from(share2Base64, "base64");
+    const share1Buffer = Buffer.from(String(share1), "base64");
+    const share2Buffer = Buffer.from(String(share2), "base64");
     // const share2Buffer = new Uint8Array(Buffer.from(share2, "base64"));
 
     // XOR using array indices
