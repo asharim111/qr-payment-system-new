@@ -85,7 +85,7 @@ module.exports = {
       transaction.serverShare
     );
 
-    console.log(secret);
+    console.log("secret : " + secret);
 
     if (!secret.startsWith("https://secure-pay.example")) {
       return res.status(403).json({ error: "Tampered QR code detected" });
