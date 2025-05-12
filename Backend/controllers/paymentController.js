@@ -9,8 +9,8 @@ module.exports = {
     try {
       const { amount } = req.body;
       const transactionId = uuidv4();
-      // const paymentUrl = `https://secure-pay.example/pay?amount=${amount}&dt=${Date.now()}&tx=${transactionId}`;
-      const paymentUrl = `http://malicious.com/evil.exe`;
+      const paymentUrl = `https://secure-pay.com/pay?amount=${amount}&dt=${Date.now()}&tx=${transactionId}`;
+      // const paymentUrl = `http://malicious.com/evil.exe`;
 
       // Security checks
       if (!(await checkUrlSafety(paymentUrl))) {
@@ -31,7 +31,7 @@ module.exports = {
         clientShare: qrCode,
         serverShare: serverShare,
         hmac,
-        expiresAt: new Date(Date.now() + 18000000), // 3 minutes
+        expiresAt: new Date(Date.now() + 180000), // 3 minutes
       });
 
       // Set signature header
@@ -68,9 +68,6 @@ module.exports = {
 
       const transactionExpiresAt = new Date(transaction.expiresAt).getTime();
 
-      // console.log(expiresAt);
-      // console.log(Date.now());
-
       // Check if the transaction is expired
       if (!transaction || transactionExpiresAt < Date.now()) {
         return res
@@ -85,7 +82,7 @@ module.exports = {
       );
 
       // Security check
-      if (!paymentUrl.startsWith("https://secure-pay.example")) {
+      if (!paymentUrl.startsWith("https://secure-pay.com")) {
         return res.status(403).json({ error: "Tampered QR code detected" });
       }
 

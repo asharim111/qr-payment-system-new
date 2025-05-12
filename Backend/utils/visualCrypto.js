@@ -13,8 +13,6 @@ class visualCrypto {
   async generateShares(paymentUrl, amount, transactionId) {
     const { hmac } = this.prepareData(paymentUrl, amount, transactionId);
     const [share1, share2] = this.splitData(paymentUrl);
-    console.log("share1 : " + share1);
-    console.log("share2 : " + share2);
 
     // Generate QR code with raw share1 data
     const qrCode = await QRCode.toBuffer(share1, {

@@ -38,10 +38,12 @@ function checkContentType(req) {
 }
 
 async function checkUrlSafety(url) {
+  const trustedDomain = ["secure-pay.com"];
   const parsed = new URL(url);
   const blockedExt = ["exe", "bat", "sh", "dmg", "apk", "msi", "jar", "cmd"];
   const ext = parsed.pathname.split(".").pop().toLowerCase();
   if (blockedExt.includes(ext)) return false;
+  if (!trustedDomain.includes(parsed.hostname)) return false;
 
   const res = await axios.post(
     `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${process.env.GOOGLE_SAFE_BROWSING_KEY}`,
