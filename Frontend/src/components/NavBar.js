@@ -19,7 +19,7 @@ const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
   ];
 
   const profileOptions = [
-    { name: "Compare QR", path: "/compare-qr" },
+    // { name: "Compare QR", path: "/compare-qr" },
     { name: "Generate QR", path: "/generate-qr" },
     // { name: "Scan QR", path: "/scan-qr" },
     { name: "Transaction History", path: "/transaction-history" },

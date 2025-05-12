@@ -1,8 +1,6 @@
 const crypto = require("crypto");
 const QRCode = require("qrcode");
-// const { createCanvas } = require("canvas");
 const sharp = require("sharp");
-// const Jimp = require("jimp").default;
 const jsQR = require("jsqr");
 
 // New code
@@ -10,17 +8,13 @@ class visualCrypto {
   constructor() {
     this.blockSize = 8;
     this.hmacSecret = Buffer.from(process.env.VC_SECRET, "hex");
-    // this.hmacSecret = crypto.randomBytes(32);
   }
 
-  async generateShares(paymentUrl) {
-    const { hmac } = this.prepareData(paymentUrl);
+  async generateShares(paymentUrl, amount, transactionId) {
+    const { hmac } = this.prepareData(paymentUrl, amount, transactionId);
     const [share1, share2] = this.splitData(paymentUrl);
     console.log("share1 : " + share1);
     console.log("share2 : " + share2);
-
-    // Old code for QR code generation
-    // const qrCode = await this.encodeQR(share1, hmac);
 
     // Generate QR code with raw share1 data
     const qrCode = await QRCode.toBuffer(share1, {
@@ -28,11 +22,7 @@ class visualCrypto {
       type: "png",
     });
 
-    // Process with sharp if needed (optional)
-    // const processedQr = await sharp(qrCode).ensureAlpha().toBuffer();
-
     const serverShare = this.encryptShare(share2);
-    console.log("serverShare : " + serverShare);
 
     return {
       qrCode: `data:image/png;base64,${qrCode.toString("base64")}`,
@@ -41,12 +31,18 @@ class visualCrypto {
     };
   }
 
-  prepareData(data) {
+  prepareData(paymentUrl, amount, transactionId) {
+    const hmacPayload = JSON.stringify({
+      paymentUrl: String(paymentUrl),
+      transactionId: String(transactionId),
+      amount: String(amount),
+    });
+
     const hmac = crypto
       .createHmac("sha256", this.hmacSecret)
-      .update(data)
+      .update(hmacPayload)
       .digest("hex");
-    // return { data: `${data}|${Date.now()}`, hmac };
+
     return { hmac };
   }
 
@@ -65,17 +61,6 @@ class visualCrypto {
 
     return [share1Base64, share2Base64];
   }
-
-  // async encodeQR(data, hmac) {
-  //   const canvas = createCanvas(300, 300);
-  //   await QRCode.toCanvas(canvas, data, { errorCorrectionLevel: "H" });
-
-  //   const ctx = canvas.getContext("2d");
-  //   ctx.fillStyle = "black";
-  //   ctx.fillText(hmac.slice(0, 8), 10, 290);
-
-  //   return canvas.toDataURL();
-  // }
 
   encryptShare(share) {
     const iv = crypto.randomBytes(12);
@@ -103,7 +88,6 @@ class visualCrypto {
       info.height
     );
     if (!decoded) throw new Error("QR decoding failed");
-    // const share1 = Buffer.from(decoded.data, "base64");
     const share1 = decoded.data;
 
     // 2. Decrypt serverShare
@@ -127,20 +111,10 @@ class visualCrypto {
     // 3. Validate and reconstruct
     if (share1.length !== share2.length)
       throw new Error("Share length mismatch");
-    // const reconstructed = share1.map((b, i) => b ^ share2[i]);
-
-    console.log("share1 : " + share1);
-    console.log("share2 : " + share2);
-
-    // const share1Base64 =
-    //   "T6DKo7cwpMgItmQ/XRmUL7eN5nNbCboVAmfeo4DyH3V3pV3A6iBl1deghbv2Kwfno/8mZHzww3qjErGj7sJy+eLkt+nTG2x0nepH11fcXI3cNoycuKc1F7QXB6mJXOmYv+M=";
-    // const share2Base64 =
-    //   "J9S+08QKi+d70wdKL3y5X9b0yBYjaNdlbgLx0+GLIBQayiiunh1U5fHE8YbHHDPRlM4SXUXF9EmUNMXb0/REzdfXhNjmNgpDrttq427oaaC9ALr+lZMMJtEhP8ywZdr6i54=";
 
     // Convert share1 to Uint8Array if needed
     const share1Buffer = Buffer.from(String(share1), "base64");
     const share2Buffer = Buffer.from(String(share2), "base64");
-    // const share2Buffer = new Uint8Array(Buffer.from(share2, "base64"));
 
     // XOR using array indices
     const reconstructedBuffer = Buffer.alloc(share1Buffer.length);
@@ -154,52 +128,8 @@ class visualCrypto {
         if (error) console.warn("Ignoring decoding error:", error.message);
       }
     );
-
-    console.log("reconstructed : " + reconstructedString);
-    console.log("reconstructed : " + reconstructedString.toString("base64"));
-    console.log("reconstructed : " + reconstructedString.toString("utf8"));
     return reconstructedString.toString("utf8");
-
-    // Reconstruct original secret
-    // const reconstructedSecret = Buffer.from(
-    //   share1.map((b, i) => b ^ share2[i])
-    // ).toString("utf8");
-    // console.log("Reconstructed Secret:", reconstructedSecret);
-
-    // return reconstructedSecret;
-
-    // const client = Buffer.from(clientShare, "base64");
-    // const server = Buffer.from(serverShare, "base64");
-    // return client.map((b, i) => b ^ server[i]).toString("utf8");
   }
 }
 
 module.exports = visualCrypto;
-
-// Old code
-// module.exports = {
-//   /**
-//    * Generates VC shares using XOR-based algorithm (Research )
-//    * @param {string} secret - Payment URL
-//    * @returns {Object} clientShare and serverShare
-//    */
-//   generateShares: (secret) => {
-//     const buffer = Buffer.from(secret, "utf8");
-//     const clientShare = crypto.randomBytes(buffer.length);
-//     const serverShare = buffer.map((b, i) => b ^ clientShare[i]);
-
-//     return {
-//       client: clientShare.toString("base64"),
-//       server: serverShare.toString("base64"),
-//     };
-//   },
-
-//   /**
-//    * Reconstructs secret from VC shares (Research )
-//    */
-//   reconstructSecret: (clientShare, serverShare) => {
-//     const client = Buffer.from(clientShare, "base64");
-//     const server = Buffer.from(serverShare, "base64");
-//     return client.map((b, i) => b ^ server[i]).toString("utf8");
-//   },
-// };

@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const axios = require("axios");
 
-function verifyHMAC(req, transaction) {
+function verifyHMAC(req, paymentUrl, transaction) {
   const receivedSig = req.headers["x-vc-signature"];
   if (!receivedSig || receivedSig.length === 0 || receivedSig === "undefined") {
     return { error: "Missing request signature" };
@@ -11,12 +11,13 @@ function verifyHMAC(req, transaction) {
   }
 
   const hmacPayload = JSON.stringify({
+    paymentUrl: String(paymentUrl),
     transactionId: String(transaction.transactionId),
     amount: String(transaction.amount),
   });
 
   const computedSig = crypto
-    .createHmac("sha256", process.env.VC_SECRET)
+    .createHmac("sha256", Buffer.from(process.env.VC_SECRET, "hex"))
     .update(hmacPayload)
     .digest("hex");
 
