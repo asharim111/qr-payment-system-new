@@ -1,0 +1,22 @@
+Kumar, A., & Singh, R. (2022). Differential Cryptanalysis of Visual Cryptography Schemes. ACM Transactions on Security, 14(2), 203-217
+Sharma, P., & Gupta, A. (2023). AI-Based Threat Detection for QR Code Payment Systems. Journal of Cyber Security Studies, 15(3), 133-150.
+
+A QR code-based user-friendly visual cryptography scheme MAIN PAPER
+
+Enhancing Security in QR Code Technology Using AI: Exploration and Mitigation Strategies: https://www.scirp.org/journal/paperinformation?paperid=132005
+
+QRishing: The Susceptibility of Smartphone Users to QR Code Phishing Attacks: https://www.isc.meiji.ac.jp/~ethicj/USEC13/submissions/usec13_submission_02.pdf
+
+A cost-effective counterfeiting prevention method using hashing, QR code, and website: https://www.semanticscholar.org/reader/c10bc66584ab9daa42141a06a25879501f434cf0
+
+The Usefulness Of Visual Cryptography Techniques: A Literature Review: https://research.ebsco.com/c/ylm4lv/viewer/pdf/735kvydxur, https://www.webology.org/data-cms/articles/20220713122232pmwebology%2019%20(3)%20-%20207.pdf
+
+QR Code Security: Mitigating the Issue of Quishing (QR Code Phishing) Journal paper: https://www.semanticscholar.org/paper/QR-Code-Security%3A-Mitigating-the-Issue-of-Quishing-Amoah-J.B./9eb16cb18f6d22c1bc73a2e0a24f935b9a5a1ff8
+
+Gone Quishing: A Field Study of Phishing with Malicious QR Codes Conference paper: https://arxiv.org/pdf/2204.04086
+
+QsecR: Secure QR Code Scanner Using Malicious URL Detection Journal paper: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10172018
+
+Quick Response Code Security Attacks and Countermeasure Journal paper: https://www.techscience.com/JCS/v7n1/59532
+
+Mitigation Strategies Against Phishing Attacks: https://www.sciencedirect.com/science/article/pii/S0167404823002973, https://pdf.sciencedirectassets.com/271887/1-s2.0-S0167404823X00078/1-s2.0-S0167404823002973/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEEQaCXVzLWVhc3QtMSJGMEQCIFcIrrz9bSabSRS1KloqowTZat0OGDJC9vfVuA4vc%2Fi4AiBSiS8xjJDehWW%2Bw943fuxbbi7swp2umVVwfYVYWM%2Fhiiq8BQjt%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAUaDDA1OTAwMzU0Njg2NSIMWinqReUsJGUsqVmRKpAFshbhco9CYOI4aPmpw1lVlPM4laLe5tig%2BsOyJz9YOUaAyhxap0bK2ELQ0TWwR3ok%2FyQwFJAMG9N8mnyvCGvYkzO%2FDrzgci1DG7U7DYBz7JgiWx325fro00A85mfd%2B4Ya%2BTbHLSkcTu7bdgfyR7klBtPcxP5MIQoVK0tahQRn3juY4oyUt92nO00LSG7Ce4G3UpTYSwoS%2FE6VA1TYa%2FzK3lAlzfanZjeGZ4MU7ZcVmc%2BWrB8GbnSgXr1JTv4pY5GVlLv5Y6Yt299XefYz7zBOBtY%2FCTz5T3dicOWVLGhJ8wmx9xjuPvHrWS9YPWEaVKmP3%2BWVD9lD9ZPSJIu1r4w79JRaK4hACAyYJN627Aq8eT5IT7tDK5aWLrkbrcREtXMmvvQ8S3q9ARdLyXsbGE81rHeHuB4tuRzTYL3RmRJ%2BNYkhQVYX%2BMg9K%2F8M6bFLovOndcVluLUY%2B%2BwThE4Q8PONGpmMPEA3OZG84DvD%2B5XdscNj1RKeEKzh146960l0xA6d28NVaUUqbUZNblUegoWfuXjd6MSuMPf9QLbMb1Pw4Lv7JTMry68pZo2vv%2BMQyXO6VaRpbMMO5cfmYkP0QPuLA9JF%2FOMQN3l3hjuIqOPYOSe5sP7t0ybBjJLlN88ilM1uyKXZOTohKB7azNCrQQPK1cIUKQw%2F89bjB70%2FZJIevpXVeySZLehJRWTOWyjKONTDT%2Fo%2Fl5nOk2DtrzSLlSYKYU7Jr0NrpSuu0QYN9lY8cNSaH85oIFzuKuEMi1FI2fXEMrx4xIEtpk1o02uwPT0dRvWuRdov2n93hM8V2d8vzEajdgsMfkxzo4Hic2Bmx1TwHRouCgY%2FI%2Blb3v7ilD8Ld%2BcFQbnI%2BX%2Bxe2KaUzg36mgwseOMwQY6sgEiv6uKf5JSfzXYDljRXc27DQYBhYQXguWZocyA5q74TINmIWK5i8RdADSwpxCYfwbJpt%2F1IG2h6pVIR%2FfrJyeYaKsQuIRh3thhK5y4pnDrLsziSWWX0CQDfVpP55lgO6QzTHHkZfckl9qDMwt8qtWXvE2rVgyz%2F9ymJp%2FGIbo%2F%2B64mYi0ZE7ufrM4%2FDyjhETjMYeD9u9XZrklWsSqo5v4upx3%2B0e6Xo3PIYjCugJj%2FVcqY&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250513T125833Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTY4ZMKITNH%2F20250513%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=a0bd89bc02655aa714867d83739a218aca7f62e78db1d4b883f4596b4d1adb06&hash=52a86d7345bcb82944817587851c496e8bde44e4191a1d84de0a89fa461f0935&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S0167404823002973&tid=spdf-4d5e5ae5-64fb-4faa-8212-d60d167d1275&sid=3beadbf182b7b7455a2abbb981d2cf04229cgxrqb&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&rh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=13085b5604555750055d04&rr=93f253f2da473e53&cc=in

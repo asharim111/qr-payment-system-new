@@ -37,8 +37,9 @@ const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
 
   const handleLogout = async () => {
     if (loginData) {
-      await axios.post("http://localhost:8000/api/users/logout");
+      await axios.post("http://localhost:3000/api/users/logout");
       Cookies.remove("loginData");
+      Cookies.remove("token");
       setIsLoggedIn(false);
       navigate("/login");
     }
