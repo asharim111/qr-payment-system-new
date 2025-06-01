@@ -4,6 +4,7 @@ const transactionSchema = new mongoose.Schema(
   {
     transactionId: { type: String, unique: true },
     amount: { type: String, required: true },
+    order_id: { type: String, required: true },
     status: {
       type: String,
       enum: ["pending", "completed", "failed"],

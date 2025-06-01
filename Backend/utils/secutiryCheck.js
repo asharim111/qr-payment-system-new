@@ -2,17 +2,20 @@ const crypto = require("crypto");
 const axios = require("axios");
 
 function verifyHMAC(req, paymentUrl, transaction) {
-  const receivedSig = req.headers["x-vc-signature"];
+  // const receivedSig = req.headers["x-vc-signature"];
+  const receivedSig = req.query.hmac ?? null;
+  console.log(receivedSig);
   if (!receivedSig || receivedSig.length === 0 || receivedSig === "undefined") {
     return { error: "Missing request signature" };
   }
-  if (!req.body) {
-    return { error: "Missing request body" };
+  if (!req.query) {
+    return { error: "Missing payment details" };
   }
 
   const hmacPayload = JSON.stringify({
-    paymentUrl: String(paymentUrl),
     transactionId: String(transaction.transactionId),
+    userId: String(transaction.userId),
+    paymentUrl: String(paymentUrl),
     amount: String(transaction.amount),
   });
 
@@ -38,7 +41,8 @@ function checkContentType(req) {
 }
 
 async function checkUrlSafety(url) {
-  const trustedDomain = ["secure-pay.com"];
+  // const trustedDomain = ["secure-pay.com"];
+  const trustedDomain = ["f459-182-48-227-222.ngrok-free.app"];
   const parsed = new URL(url);
   const blockedExt = ["exe", "bat", "sh", "dmg", "apk", "msi", "jar", "cmd"];
   const ext = parsed.pathname.split(".").pop().toLowerCase();

@@ -10,12 +10,26 @@ class visualCrypto {
     this.hmacSecret = Buffer.from(process.env.VC_SECRET, "hex");
   }
 
-  async generateShares(paymentUrl, amount, transactionId) {
-    const { hmac } = this.prepareData(paymentUrl, amount, transactionId);
+  async generateShares(paymentUrl, transactionId, userId, amount) {
+    const { hmac } = this.prepareData(
+      paymentUrl,
+      transactionId,
+      userId,
+      amount
+    );
     const [share1, share2] = this.splitData(paymentUrl);
 
+    // Append hmac and share1 as query parameters to the paymentUrl
+    const url = new URL(paymentUrl);
+    url.searchParams.append("hmac", hmac);
+    url.searchParams.append("s1", share1);
+    const paymentUrlWithParams = url.toString();
+
+    console.log(paymentUrlWithParams);
+
     // Generate QR code with raw share1 data
-    const qrCode = await QRCode.toBuffer(share1, {
+    // const qrCode = await QRCode.toBuffer(share1, {
+    const qrCode = await QRCode.toBuffer(paymentUrlWithParams, {
       errorCorrectionLevel: "H",
       type: "png",
     });
@@ -24,15 +38,17 @@ class visualCrypto {
 
     return {
       qrCode: `data:image/png;base64,${qrCode.toString("base64")}`,
+      share1,
       serverShare,
       hmac,
     };
   }
 
-  prepareData(paymentUrl, amount, transactionId) {
+  prepareData(paymentUrl, transactionId, userId, amount) {
     const hmacPayload = JSON.stringify({
-      paymentUrl: String(paymentUrl),
       transactionId: String(transactionId),
+      userId: String(userId),
+      paymentUrl: String(paymentUrl),
       amount: String(amount),
     });
 
@@ -72,21 +88,21 @@ class visualCrypto {
 
   async reconstructSecret(clientShare, serverShare) {
     // 1. Decode QR to get clientShare
-    const base64Data = clientShare.split(",")[1];
-    const qrBuffer = Buffer.from(base64Data, "base64");
-    // console.log(buffer);
-    const { data, info } = await sharp(qrBuffer)
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+    // const base64Data = clientShare.split(",")[1];
+    // const qrBuffer = Buffer.from(clientShare, "base64");
+    // const { data, info } = await sharp(qrBuffer)
+    //   .ensureAlpha()
+    //   .raw()
+    //   .toBuffer({ resolveWithObject: true });
 
-    const decoded = jsQR(
-      new Uint8ClampedArray(data.buffer),
-      info.width,
-      info.height
-    );
-    if (!decoded) throw new Error("QR decoding failed");
-    const share1 = decoded.data;
+    // const decoded = jsQR(
+    //   new Uint8ClampedArray(data.buffer),
+    //   info.width,
+    //   info.height
+    // );
+    // if (!decoded) throw new Error("QR decoding failed");
+    // const share1 = decoded.data;
+    const share1 = clientShare;
 
     // 2. Decrypt serverShare
     const encryptedBuffer = Buffer.from(serverShare, "base64");

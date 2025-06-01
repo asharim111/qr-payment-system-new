@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Form,
   Button,
@@ -9,61 +9,37 @@ import {
   Modal,
 } from "react-bootstrap";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const GenerateQR = () => {
   const [amount, setAmount] = useState("");
   const [qrCode, setQrCode] = useState(null);
   const [transactionId, setTransactionId] = useState(null);
   const [showQR, setShowQR] = useState(false);
-  const pollingRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setShowQR(false);
     setQrCode(null);
     setTransactionId(null);
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-    }
     try {
+      const token = Cookies.get("token");
       const response = await axios.post(
         "http://localhost:3000/api/payments/initiate",
-        { amount }
+        { amount },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setQrCode(response.data.qrCode || response.data.qrBase64);
       setTransactionId(response.data.transactionId);
       setShowQR(true);
-
-      // Start polling for verification
-      // pollingRef.current = setInterval(async () => {
-      //   try {
-      //     const verification = await axios.post(
-      //       "http://localhost:3000/api/payments/verify",
-      //       {
-      //         clientShare: qrCode,
-      //         transactionId: response.data.transactionId,
-      //       }
-      //     );
-      //     if (verification.data.status === "success") {
-      //       clearInterval(pollingRef.current);
-      //       alert("Payment successful!");
-      //       // window.location.reload();
-      //     }
-      //   } catch (err) {
-      //     // Optionally handle polling errors
-      //   }
-      // }, 20000);
     } catch (error) {
       console.error("Error:", error);
     }
   };
-
-  // Cleanup polling on unmount
-  React.useEffect(() => {
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, []);
 
   const handleClose = () => setShowQR(false);
 

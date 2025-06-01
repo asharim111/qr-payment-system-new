@@ -2,6 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const paymentRoutes = require("./routes/routes");
+const Razorpay = require("razorpay");
+const cookieParser = require("cookie-parser");
+const crypto = require("crypto");
+require("dotenv").config();
 const { securityMiddleware } = require("./utils/secutiryCheck");
 const User = require("./models/User");
 const bcrypt = require("bcryptjs");
@@ -26,11 +30,27 @@ app.use(
     origin: process.env.ORIGINS.split(","),
   })
 );
+app.use(cookieParser());
 
 // Middleware
 app.use(express.json());
 app.use(express.static("public"));
 // app.use(securityMiddleware);
+
+// Verify Payment Endpoint
+// app.post('/verify-payment', (req, res) => {
+//   const { orderId, paymentId, signature } = req.body;
+//   const generatedSignature = crypto
+//     .createHmac('sha256', process.env.RAZORPAY_SECRET)
+//     .update(`${orderId}|${paymentId}`)
+//     .digest('hex');
+
+//   if (generatedSignature === signature) {
+//     res.json({ success: true });
+//   } else {
+//     res.status(400).json({ success: false });
+//   }
+// });
 
 // Routes
 app.use("/api/payments", paymentRoutes);
@@ -43,11 +63,8 @@ const loginLimiter = rateLimit({
     "Too many login attempts from this IP, please try again after 15 minutes",
 });
 
-const SECRET_KEY = "12345678";
-
 app.post("/api/users/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
-  console.log(username, password);
   const user = await User.findOne({ username });
 
   if (!user) {
@@ -85,16 +102,12 @@ app.post("/api/users/login", loginLimiter, async (req, res) => {
       qrCodeDataUrl,
     });
   } else {
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      SECRET_KEY,
-      {
-        expiresIn: "1h",
-      }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
     res.cookie("token", token, {
-      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-      secure: true, // Ensures cookies are only sent over HTTPS in production
+      // httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+      // secure: true, // Ensures cookies are only sent over HTTPS in production
       maxAge: 60 * 60 * 1000, // 1 hour expiration time
     });
 
@@ -107,6 +120,11 @@ app.post("/api/users/login", loginLimiter, async (req, res) => {
 app.post("/api/users/logout", (req, res) => {
   res.clearCookie("token");
   res.send();
+});
+
+app.get("/", (req, res) => {
+  // res.send(process.env.ORIGINS);
+  res.send("HELLO API WWROKING");
 });
 
 // Server

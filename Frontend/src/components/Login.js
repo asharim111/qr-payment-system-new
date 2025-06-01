@@ -36,8 +36,6 @@ const Login = ({ setIsLoggedIn }) => {
         }
       );
       const loginData = response.data;
-      console.log(loginData);
-
       if (loginData.qrCode) {
         // setShowModal(true);
         // setIsLoggedIn(true);
