@@ -5,6 +5,11 @@ const Razorpay = require("razorpay");
 const { checkUrlSafety, verifyHMAC } = require("../utils/secutiryCheck");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
+const redis = require("redis");
+
+// Initialize Redis client
+const redisClient = redis.createClient();
+redisClient.connect().catch(console.error);
 
 module.exports = {
   initiatePayment: async (req, res) => {
@@ -15,6 +20,11 @@ module.exports = {
       });
 
       const { amount } = req.body;
+
+      if (!amount || isNaN(amount) || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+
       const options = {
         amount: amount * 100, // Convert to paise
         currency: "INR",
@@ -25,7 +35,7 @@ module.exports = {
 
       const transactionId = uuidv4();
       // const paymentUrl = `https://secure-pay.com/pay?amount=${amount}&dt=${Date.now()}&tx=${transactionId}`;
-      const paymentUrl = `https://f459-182-48-227-222.ngrok-free.app/api/payments/verify?tx=${transactionId}`;
+      const paymentUrl = `https://435e-27-107-135-211.ngrok-free.app/api/payments/verify?tx=${transactionId}`;
       // const paymentUrl = `http://malicious.com/evil.exe`;
 
       // Security checks
@@ -67,6 +77,7 @@ module.exports = {
 
       res.json({
         qrCode,
+        hmac,
         transactionId: transaction.transactionId,
       });
     } catch (error) {
@@ -78,21 +89,12 @@ module.exports = {
 
   verifyPayment: async (req, res) => {
     try {
-      if (!req.query) {
-        return res.status(400).json({ error: "No data provided" });
-      }
+      const { tx: transactionId, s1: clientShare, hmac } = req.query;
 
-      if (!req.query.s1) {
-        return res.status(400).json({ error: "Client share is required" });
+      // Validate input
+      if (!transactionId || !clientShare || !hmac) {
+        return res.status(400).json({ error: "Missing required parameters" });
       }
-
-      if (!req.query.hmac) {
-        return res.status(400).json({ error: "Invalid transaction" });
-      }
-
-      const clientShare = req.query.s1 ?? null;
-      const transactionId = req.query.tx ?? null;
-      const hmac = req.query.hmac ?? null;
       const transaction = await Transaction.findOne({
         transactionId,
       });
@@ -117,11 +119,9 @@ module.exports = {
         transaction.serverShare
       );
 
-      console.log("Payment URL:", paymentUrl);
-
       // Security check
       if (
-        !paymentUrl.startsWith("https://f459-182-48-227-222.ngrok-free.app")
+        !paymentUrl.startsWith("https://435e-27-107-135-211.ngrok-free.app")
       ) {
         return res.status(403).json({ error: "Tampered QR code detected" });
       }
@@ -138,7 +138,21 @@ module.exports = {
         amount: transaction.amount * 100,
         currency: "INR",
         name: "myCompany",
-        order_id: transaction.order_id,
+        order_id: transaction.orderId,
+        // handler: async (response) => {
+        // Update transaction status
+        // transaction.status = "completed";
+        // transaction.paymentId = response.razorpay_payment_id;
+        // await transaction.save();
+        // // Notify via Redis
+        // redisClient.publish(
+        //   `tx:${transactionId}`,
+        //   JSON.stringify({
+        //     status: "completed",
+        //     paymentId: response.razorpay_payment_id,
+        //   })
+        // );
+        // },
         prefill: {
           name: "Sharim Ansari",
           email: "Ktq0i@example.com",
@@ -146,31 +160,97 @@ module.exports = {
         // Add other options as needed
       };
 
-      res.send(`
-    <html>
-      <head>
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      </head>
-      <body>
-        <script>
-          var options = ${JSON.stringify(options)};
-          options.handler = function (response){
-            window.location.href = "/payment-success?payment_id=" + response.razorpay_payment_id;
-          };
-          var rzp = new Razorpay(options);
-          rzp.open();
-        </script>
-        <h3>Redirecting to payment...</h3>
-      </body>
-    </html>
-  `);
+      transaction.status = "processing";
+      await transaction.save();
 
+      res.send(`
+        <html>
+          <head>
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+          </head>
+          <body>
+            <script>
+              var options = ${JSON.stringify(options)};
+              options.handler = function (response){
+                window.location.href = "/api/payments/success?payment_id=" + response.razorpay_payment_id +"&tx=${
+                  transaction.transactionId
+                }";
+              };
+              var rzp = new Razorpay(options);
+              rzp.open();
+            </script>
+            <h3>Redirecting to payment...</h3>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      res.status(401).json({ error: error.message });
+    }
+  },
+
+  successPayment: async (req, res) => {
+    try {
+      const { tx, payment_id } = req.query;
+
+      if (!payment_id) {
+        return res.status(400).json({ error: "Missing payment ID" });
+      }
+
+      // Find transaction by payment ID
+      const transaction = await Transaction.findOne({
+        transactionId: tx,
+      });
+
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Update transaction status
       transaction.status = "completed";
       await transaction.save();
 
-      res.json({ status: "success", message: "Payment processed" });
+      // Notify via Redis
+      redisClient.publish(
+        `tx:${transaction.transactionId}`,
+        JSON.stringify({ status: "completed", paymentId: payment_id })
+      );
+
+      res.json({ message: "Payment successful", transaction });
     } catch (error) {
-      res.status(401).json({ error: error.message });
+      res.status(500).json({ error: "Payment success handling failed" });
+    }
+  },
+
+  failurePayment: async (req, res) => {
+    try {
+      const { tx, payment_id } = req.query;
+
+      if (!payment_id) {
+        return res.status(400).json({ error: "Missing payment ID" });
+      }
+
+      // Find transaction by payment ID
+      const transaction = await Transaction.findOne({
+        paymentId: payment_id,
+      });
+
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Update transaction status
+      transaction.status = "failed";
+      await transaction.save();
+
+      // Notify via Redis
+      redisClient.publish(
+        `tx:${transaction.transactionId}`,
+        JSON.stringify({ status: "failed", paymentId: payment_id })
+      );
+
+      res.json({ message: "Payment failed", transaction });
+    } catch (error) {
+      res.status(500).json({ error: "Payment failure handling failed" });
     }
   },
 };

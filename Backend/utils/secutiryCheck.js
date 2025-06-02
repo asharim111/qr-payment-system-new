@@ -4,7 +4,6 @@ const axios = require("axios");
 function verifyHMAC(req, paymentUrl, transaction) {
   // const receivedSig = req.headers["x-vc-signature"];
   const receivedSig = req.query.hmac ?? null;
-  console.log(receivedSig);
   if (!receivedSig || receivedSig.length === 0 || receivedSig === "undefined") {
     return { error: "Missing request signature" };
   }
@@ -42,7 +41,7 @@ function checkContentType(req) {
 
 async function checkUrlSafety(url) {
   // const trustedDomain = ["secure-pay.com"];
-  const trustedDomain = ["f459-182-48-227-222.ngrok-free.app"];
+  const trustedDomain = ["435e-27-107-135-211.ngrok-free.app"];
   const parsed = new URL(url);
   const blockedExt = ["exe", "bat", "sh", "dmg", "apk", "msi", "jar", "cmd"];
   const ext = parsed.pathname.split(".").pop().toLowerCase();

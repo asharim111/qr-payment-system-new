@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   Button,
@@ -16,6 +16,14 @@ const GenerateQR = () => {
   const [qrCode, setQrCode] = useState(null);
   const [transactionId, setTransactionId] = useState(null);
   const [showQR, setShowQR] = useState(false);
+  const [txStatus, setTxStatus] = useState("");
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      if (socket) socket.close();
+    };
+  }, [socket]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +44,20 @@ const GenerateQR = () => {
       setQrCode(response.data.qrCode || response.data.qrBase64);
       setTransactionId(response.data.transactionId);
       setShowQR(true);
+
+      const { transactionId, hmac } = response.data;
+
+      // Open WebSocket connection
+      const ws = new WebSocket(
+        `wss://435e-27-107-135-211.ngrok-free.app/ws?tx=${transactionId}&hmac=${hmac}`
+      );
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        setTxStatus(data.status);
+      };
+
+      setSocket(ws);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -90,6 +112,7 @@ const GenerateQR = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      {txStatus && <p>Status: {txStatus}</p>}
     </Container>
   );
 };

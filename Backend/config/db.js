@@ -15,7 +15,7 @@ const transactionSchema = new mongoose.Schema(
     hmac: { type: String, required: true },
     status: {
       type: String,
-      enum: ["pending", "completed", "failed"],
+      enum: ["pending", "processing", "completed", "failed"],
       default: "pending",
     },
     // expiresAt: { type: Date, index: { expires: "2m" } },
