@@ -18,7 +18,8 @@ const transactionSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
-    expiresAt: { type: Date, index: { expires: "2m" } },
+    // expiresAt: { type: Date, index: { expires: "2m" } },
+    expiresAt: { type: Date },
   },
   { timestamps: true }
 );

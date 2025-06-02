@@ -137,12 +137,12 @@ module.exports = {
         key: process.env.RAZORPAY_KEY_ID,
         amount: transaction.amount * 100,
         currency: "INR",
-        // name: "Your Company",
+        name: "myCompany",
         order_id: transaction.order_id,
-        // prefill: {
-        //   name: transaction.userName,
-        //   email: transaction.userEmail,
-        // },
+        prefill: {
+          name: "Sharim Ansari",
+          email: "Ktq0i@example.com",
+        },
         // Add other options as needed
       };
 
