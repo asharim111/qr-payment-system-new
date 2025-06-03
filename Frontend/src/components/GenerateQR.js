@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Form,
   Button,
@@ -10,6 +10,7 @@ import {
 } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "js-cookie";
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 const GenerateQR = () => {
   const [amount, setAmount] = useState("");
@@ -17,13 +18,31 @@ const GenerateQR = () => {
   const [transactionId, setTransactionId] = useState(null);
   const [showQR, setShowQR] = useState(false);
   const [txStatus, setTxStatus] = useState("");
-  const [socket, setSocket] = useState(null);
+  const [hmac] = useState(null);
+  const wsRef = useRef(null);
 
   useEffect(() => {
-    return () => {
-      if (socket) socket.close();
-    };
-  }, [socket]);
+    if (transactionId && hmac) {
+      const wsUrl = `ws://localhost:8080/?tx=${transactionId}&hmac=${hmac}`;
+      const ws = new ReconnectingWebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log(event);
+          setTxStatus(data.status);
+        } catch {
+          console.log(event);
+          setTxStatus(event.data);
+        }
+      };
+      ws.onerror = () => setTxStatus("WebSocket error");
+      ws.onclose = () => setTxStatus("WebSocket closed");
+      wsRef.current = ws;
+
+      return () => ws.close();
+    }
+  }, [transactionId, hmac]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,20 +63,6 @@ const GenerateQR = () => {
       setQrCode(response.data.qrCode || response.data.qrBase64);
       setTransactionId(response.data.transactionId);
       setShowQR(true);
-
-      const { transactionId, hmac } = response.data;
-
-      // Open WebSocket connection
-      const ws = new WebSocket(
-        `wss://435e-27-107-135-211.ngrok-free.app/ws?tx=${transactionId}&hmac=${hmac}`
-      );
-
-      ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        setTxStatus(data.status);
-      };
-
-      setSocket(ws);
     } catch (error) {
       console.error("Error:", error);
     }

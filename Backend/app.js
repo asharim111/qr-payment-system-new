@@ -36,22 +36,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.static("public"));
 // app.use(securityMiddleware);
-
-// Verify Payment Endpoint
-// app.post('/verify-payment', (req, res) => {
-//   const { orderId, paymentId, signature } = req.body;
-//   const generatedSignature = crypto
-//     .createHmac('sha256', process.env.RAZORPAY_SECRET)
-//     .update(`${orderId}|${paymentId}`)
-//     .digest('hex');
-
-//   if (generatedSignature === signature) {
-//     res.json({ success: true });
-//   } else {
-//     res.status(400).json({ success: false });
-//   }
-// });
-
 // Routes
 app.use("/api/payments", paymentRoutes);
 

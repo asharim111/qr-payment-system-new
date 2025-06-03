@@ -41,7 +41,7 @@ function checkContentType(req) {
 
 async function checkUrlSafety(url) {
   // const trustedDomain = ["secure-pay.com"];
-  const trustedDomain = [process.env.BASE_URL];
+  const trustedDomain = [process.env.BASE_URL.replace(/(^\w+:|^)\/\//, "")];
   const parsed = new URL(url);
   const blockedExt = ["exe", "bat", "sh", "dmg", "apk", "msi", "jar", "cmd"];
   const ext = parsed.pathname.split(".").pop().toLowerCase();

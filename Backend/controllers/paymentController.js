@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const redis = require("redis");
 
 // Initialize Redis client
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({ url: "redis://localhost:6379" });
 redisClient.connect().catch(console.error);
 
 module.exports = {
@@ -36,7 +36,7 @@ module.exports = {
       const transactionId = uuidv4();
       // const paymentUrl = `https://secure-pay.com/pay?amount=${amount}&dt=${Date.now()}&tx=${transactionId}`;
       const paymentUrl =
-        process.env.BASE_URL + `api/payments/verify?tx=${transactionId}`;
+        process.env.BASE_URL + `/api/payments/verify?tx=${transactionId}`;
       // const paymentUrl = `http://malicious.com/evil.exe`;
 
       // Security checks
@@ -209,14 +209,17 @@ module.exports = {
       await transaction.save();
 
       // Notify via Redis
-      redisClient.publish(
-        `tx:${transaction.transactionId}`,
-        JSON.stringify({ status: "completed", paymentId: payment_id })
+      await redisClient.publish(
+        `tx:${transactionId}`,
+        JSON.stringify({
+          status: "Payment Successful", // or "Invalid Transaction", etc.
+          timestamp: Date.now(),
+        })
       );
 
       res.json({ message: "Payment successful", transaction });
     } catch (error) {
-      res.status(500).json({ error: "Payment success handling failed" });
+      res.status(500).json({ error });
     }
   },
 
