@@ -35,7 +35,8 @@ module.exports = {
 
       const transactionId = uuidv4();
       // const paymentUrl = `https://secure-pay.com/pay?amount=${amount}&dt=${Date.now()}&tx=${transactionId}`;
-      const paymentUrl = `https://435e-27-107-135-211.ngrok-free.app/api/payments/verify?tx=${transactionId}`;
+      const paymentUrl =
+        process.env.BASE_URL + `api/payments/verify?tx=${transactionId}`;
       // const paymentUrl = `http://malicious.com/evil.exe`;
 
       // Security checks
@@ -120,9 +121,7 @@ module.exports = {
       );
 
       // Security check
-      if (
-        !paymentUrl.startsWith("https://435e-27-107-135-211.ngrok-free.app")
-      ) {
+      if (!paymentUrl.startsWith(process.env.BASE_URL)) {
         return res.status(403).json({ error: "Tampered QR code detected" });
       }
 
