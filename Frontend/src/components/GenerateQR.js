@@ -10,7 +10,6 @@ import {
 } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "js-cookie";
-import ReconnectingWebSocket from "reconnecting-websocket";
 
 const GenerateQR = () => {
   const [amount, setAmount] = useState("");
@@ -22,24 +21,36 @@ const GenerateQR = () => {
   const wsRef = useRef(null);
 
   useEffect(() => {
-    if (transactionId && hmac) {
+    // if (transactionId && hmac) {
+    if (transactionId) {
       const wsUrl = `ws://localhost:8080/?tx=${transactionId}&hmac=${hmac}`;
-      const ws = new ReconnectingWebSocket(wsUrl);
+      console.log("[Frontend] Connecting to", wsUrl);
+      const ws = new window.WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log("[Frontend] WebSocket connection established");
+      };
 
       ws.onmessage = (event) => {
+        console.log("[Frontend] Received message:", event.data);
         try {
           const data = JSON.parse(event.data);
-          console.log(event);
           setTxStatus(data.status);
         } catch {
-          console.log(event);
           setTxStatus(event.data);
         }
       };
-      ws.onerror = () => setTxStatus("WebSocket error");
-      ws.onclose = () => setTxStatus("WebSocket closed");
-      wsRef.current = ws;
 
+      ws.onerror = (error) => {
+        console.error("[Frontend] WebSocket error:", error);
+        setTxStatus("WebSocket error");
+      };
+
+      ws.onclose = () => {
+        console.log("[Frontend] WebSocket connection closed");
+      };
+
+      wsRef.current = ws;
       return () => ws.close();
     }
   }, [transactionId, hmac]);

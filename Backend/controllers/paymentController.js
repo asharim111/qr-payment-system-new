@@ -5,11 +5,7 @@ const Razorpay = require("razorpay");
 const { checkUrlSafety, verifyHMAC } = require("../utils/secutiryCheck");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
-const redis = require("redis");
-
-// Initialize Redis client
-const redisClient = redis.createClient({ url: "redis://localhost:6379" });
-redisClient.connect().catch(console.error);
+const { notifyTransaction } = require("../utils/websocket-server");
 
 module.exports = {
   initiatePayment: async (req, res) => {
@@ -143,15 +139,6 @@ module.exports = {
         // transaction.status = "completed";
         // transaction.paymentId = response.razorpay_payment_id;
         // await transaction.save();
-        // // Notify via Redis
-        // redisClient.publish(
-        //   `tx:${transactionId}`,
-        //   JSON.stringify({
-        //     status: "completed",
-        //     paymentId: response.razorpay_payment_id,
-        //   })
-        // );
-        // },
         prefill: {
           name: "Sharim Ansari",
           email: "Ktq0i@example.com",
@@ -188,39 +175,35 @@ module.exports = {
   },
 
   successPayment: async (req, res) => {
-    try {
-      const { tx, payment_id } = req.query;
+    // try {
+    const { tx, payment_id } = req.query;
 
-      if (!payment_id) {
-        return res.status(400).json({ error: "Missing payment ID" });
-      }
-
-      // Find transaction by payment ID
-      const transaction = await Transaction.findOne({
-        transactionId: tx,
-      });
-
-      if (!transaction) {
-        return res.status(404).json({ error: "Transaction not found" });
-      }
-
-      // Update transaction status
-      transaction.status = "completed";
-      await transaction.save();
-
-      // Notify via Redis
-      await redisClient.publish(
-        `tx:${transactionId}`,
-        JSON.stringify({
-          status: "Payment Successful", // or "Invalid Transaction", etc.
-          timestamp: Date.now(),
-        })
-      );
-
-      res.json({ message: "Payment successful", transaction });
-    } catch (error) {
-      res.status(500).json({ error });
+    if (!payment_id) {
+      return res.status(400).json({ error: "Missing payment ID" });
     }
+
+    // Find transaction by payment ID
+    const transaction = await Transaction.findOne({
+      transactionId: tx,
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    // Update transaction status
+    transaction.status = "completed";
+    await transaction.save();
+
+    notifyTransaction(transaction.transactionId, {
+      status: "Payment Successful",
+      timestamp: Date.now(),
+    });
+
+    res.json({ message: "Payment successful", transaction });
+    // } catch (error) {
+    //   res.status(500).json({ error: "Payment handling failed" });
+    // }
   },
 
   failurePayment: async (req, res) => {
@@ -243,12 +226,6 @@ module.exports = {
       // Update transaction status
       transaction.status = "failed";
       await transaction.save();
-
-      // Notify via Redis
-      redisClient.publish(
-        `tx:${transaction.transactionId}`,
-        JSON.stringify({ status: "failed", paymentId: payment_id })
-      );
 
       res.json({ message: "Payment failed", transaction });
     } catch (error) {
