@@ -1,10 +1,16 @@
 const crypto = require("crypto");
 const axios = require("axios");
+const { notifyTransaction } = require("../utils/websocket-server");
 
 function verifyHMAC(req, paymentUrl, transaction) {
   // const receivedSig = req.headers["x-vc-signature"];
   const receivedSig = req.query.hmac ?? null;
   if (!receivedSig || receivedSig.length === 0 || receivedSig === "undefined") {
+    notifyTransaction(transaction.transactionId, {
+      status:
+        "Invald QR code (possible tampering or HMAC validation failed (possible MITM or cloning)",
+      timestamp: Date.now(),
+    });
     return { error: "Missing request signature" };
   }
   if (!req.query) {
@@ -26,13 +32,26 @@ function verifyHMAC(req, paymentUrl, transaction) {
   const receivedBuf = Buffer.from(receivedSig, "hex");
   const computedBuf = Buffer.from(computedSig, "hex");
 
-  if (receivedBuf.length !== computedBuf.length) {
+  if (
+    receivedBuf.length !== computedBuf.length ||
+    !crypto.timingSafeEqual(receivedBuf, computedBuf)
+  ) {
+    notifyTransaction(transaction.transactionId, {
+      status:
+        "Invald QR code (possible tampering or HMAC validation failed (possible MITM or cloning)",
+      timestamp: Date.now(),
+    });
     return { error: "Invalid security signature" };
   }
 
-  if (!crypto.timingSafeEqual(receivedBuf, computedBuf)) {
-    return { error: "Invalid security signature" };
-  }
+  // if () {
+  //   notifyTransaction(transaction.transactionId, {
+  //     status:
+  //       "Invald QR code (possible tampering or HMAC validation failed (possible MITM or cloning)",
+  //     timestamp: Date.now(),
+  //   });
+  //   return { error: "Invalid security signature" };
+  // }
 }
 
 function checkContentType(req) {

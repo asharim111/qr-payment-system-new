@@ -13,24 +13,24 @@ wss.on("connection", (ws, req) => {
   const transactionId = params.tx;
   const hmac = params.hmac;
 
-  console.log(`[WebSocket] New connection: tx=${transactionId}, hmac=${hmac}`);
+  // console.log(`[WebSocket] New connection: tx=${transactionId}, hmac=${hmac}`);
 
   if (transactionId) {
     connections.set(transactionId, ws);
-    console.log(
-      `[WebSocket] Registered connection for transaction ${transactionId}`
-    );
+    // console.log(
+    //   `[WebSocket] Registered connection for transaction ${transactionId}`
+    // );
   }
 
   ws.on("close", () => {
     connections.delete(transactionId);
-    console.log(
-      `[WebSocket] Connection closed for transaction ${transactionId}`
-    );
+    // console.log(
+    //   `[WebSocket] Connection closed for transaction ${transactionId}`
+    // );
   });
 
   ws.on("error", (err) => {
-    console.error(`[WebSocket] Error for tx=${transactionId}:`, err);
+    // console.error(`[WebSocket] Error for tx=${transactionId}:`, err);
   });
 });
 
@@ -39,9 +39,9 @@ function notifyTransaction(transactionId, message) {
   const ws = connections.get(transactionId);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
-    console.log(`[WebSocket] Sent message to tx=${transactionId}:`, message);
+    // console.log(`[WebSocket] Sent message to tx=${transactionId}:`, message);
   } else {
-    console.log(`[WebSocket] No active connection for tx=${transactionId}`);
+    // console.log(`[WebSocket] No active connection for tx=${transactionId}`);
   }
 }
 

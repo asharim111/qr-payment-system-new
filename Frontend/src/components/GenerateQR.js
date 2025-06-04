@@ -24,7 +24,7 @@ const GenerateQR = () => {
     // if (transactionId && hmac) {
     if (transactionId) {
       const wsUrl = `ws://localhost:8080/?tx=${transactionId}&hmac=${hmac}`;
-      console.log("[Frontend] Connecting to", wsUrl);
+      // console.log("[Frontend] Connecting to", wsUrl);
       const ws = new window.WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -36,6 +36,10 @@ const GenerateQR = () => {
         try {
           const data = JSON.parse(event.data);
           setTxStatus(data.status);
+          alert(data.status);
+          setQrCode(null);
+          setShowQR(false);
+          setAmount("");
         } catch {
           setTxStatus(event.data);
         }
@@ -128,7 +132,7 @@ const GenerateQR = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      {txStatus && <p>Status: {txStatus}</p>}
+      {/* {txStatus && <p>Status: {txStatus}</p>} */}
     </Container>
   );
 };

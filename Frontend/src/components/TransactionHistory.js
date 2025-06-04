@@ -1,11 +1,39 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { Table, Container, Card } from "react-bootstrap";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const TransactionHistory = () => {
-  const transactions = [
-    { id: 1, date: "2024-09-14", amount: "$150", status: "Success" },
-    { id: 2, date: "2024-09-13", amount: "$90", status: "Failed" },
-  ];
+  const [transactions, setTransactions] = useState([]);
+  const token = localStorage.getItem("token") || Cookies.get("token");
+  const navigate = useNavigate();
+
+  if (!token) {
+    navigate("/login");
+  }
+
+  function formatDate(dateString) {
+    const isoString = "2025-06-04T10:42:35.779Z";
+    const date = new Date(isoString);
+    const formatted = date.toLocaleString(); // e.g., "6/4/2025, 4:12:35 PM"
+    return formatted;
+  }
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const response = await axios.get(
+        "http://localhost:3000/api/payments/transactions",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setTransactions(response.data);
+    };
+    fetchTransactions();
+  }, [token]);
 
   return (
     <Container className="mt-5">
@@ -21,14 +49,22 @@ const TransactionHistory = () => {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((tx) => (
-              <tr key={tx.id}>
-                <td>{tx.id}</td>
-                <td>{tx.date}</td>
-                <td>{tx.amount}</td>
-                <td>{tx.status}</td>
+            {transactions.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="text-center">
+                  No transactions found.
+                </td>
               </tr>
-            ))}
+            ) : (
+              transactions.map((tx) => (
+                <tr key={tx.transactionId}>
+                  <td>{tx.transactionId}</td>
+                  <td>{formatDate(tx.date)}</td>
+                  <td>{tx.amount}</td>
+                  <td>{tx.status}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </Table>
       </Card>

@@ -66,7 +66,7 @@ module.exports = {
         clientShare: share1,
         serverShare: serverShare,
         hmac,
-        expiresAt: new Date(Date.now() + 600000), // 3 minutes
+        expiresAt: new Date(Date.now() + 600000000), // 3 minutes
       });
 
       // Set signature header
@@ -90,6 +90,10 @@ module.exports = {
 
       // Validate input
       if (!transactionId || !clientShare || !hmac) {
+        notifyTransaction(transaction.transactionId, {
+          status: "Invalid QR code (possible tampering or MITM)",
+          timestamp: Date.now(),
+        });
         return res.status(400).json({ error: "Missing required parameters" });
       }
       const transaction = await Transaction.findOne({
@@ -98,13 +102,24 @@ module.exports = {
 
       // Validity checks
       if (!transaction || transaction.status !== "pending") {
+        notifyTransaction(transaction.transactionId, {
+          status:
+            "Invalid transaction or expired. Please generate a new QR code.",
+          timestamp: Date.now(),
+        });
         return res.status(410).json({ error: "Invalid transaction" });
       }
 
-      const transactionExpiresAt = new Date(transaction.expiresAt).getTime();
+      const transactionCreatedAt = new Date(transaction.createdAt).getTime();
+      const transactionExpiresAt = transactionCreatedAt + 2 * 60 * 1000;
 
       // Check if the transaction is expired
-      if (!transaction || transactionExpiresAt < Date.now()) {
+      if (!transaction || Date.now() > transactionExpiresAt) {
+        notifyTransaction(transaction.transactionId, {
+          status:
+            "Invalid or expired transaction. Please generate a new QR code.",
+          timestamp: Date.now(),
+        });
         return res
           .status(410)
           .json({ error: "Invalid or expired transaction" });
@@ -118,6 +133,10 @@ module.exports = {
 
       // Security check
       if (!paymentUrl.startsWith(process.env.BASE_URL)) {
+        notifyTransaction(transaction.transactionId, {
+          status: "Phishing attempt detected. Untrusted domain in QR code",
+          timestamp: Date.now(),
+        });
         return res.status(403).json({ error: "Tampered QR code detected" });
       }
 
@@ -159,6 +178,11 @@ module.exports = {
               var options = ${JSON.stringify(options)};
               options.handler = function (response){
                 window.location.href = "/api/payments/success?payment_id=" + response.razorpay_payment_id +"&tx=${
+                  transaction.transactionId
+                }";
+              };
+              options.error = function (response) {
+                window.location.href = "/api/payments/failure?payment_id=" + response.razorpay_payment_id +"&tx=${
                   transaction.transactionId
                 }";
               };
@@ -216,7 +240,7 @@ module.exports = {
 
       // Find transaction by payment ID
       const transaction = await Transaction.findOne({
-        paymentId: payment_id,
+        transactionId: tx,
       });
 
       if (!transaction) {
@@ -227,9 +251,35 @@ module.exports = {
       transaction.status = "failed";
       await transaction.save();
 
+      notifyTransaction(transaction.transactionId, {
+        status: "Payment Failed",
+        timestamp: Date.now(),
+      });
+
       res.json({ message: "Payment failed", transaction });
     } catch (error) {
       res.status(500).json({ error: "Payment failure handling failed" });
     }
+  },
+
+  getAllTransactions: async (req, res) => {
+    // try {
+    const token =
+      req.headers["authorization"]?.split(" ")[1] || req.cookies.token;
+
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const userId = jwt.verify(token, process.env.JWT_SECRET);
+
+    const transactions = await Transaction.find({ userId: userId.id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(transactions);
+    // } catch (error) {
+    //   res.status(500).json({ error: "Failed to fetch transactions" });
+    // }
   },
 };
